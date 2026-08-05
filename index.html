@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kalkulator Berat Logam</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6; /* bg-gray-100 */
+        }
+        .fade-in {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 text-gray-800">
+
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6 md:p-8">
+        
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-2xl md:text-3xl font-bold text-gray-900 mb-2">Kalkulator Berat Logam</h1>
+            <p class="text-sm text-gray-500">Hitung perkiraan berat berbagai jenis dan bentuk logam.</p>
+        </div>
+
+        <form id="calculatorForm" class="space-y-6">
+            
+            <!-- Pilih Logam -->
+            <div>
+                <label for="metalType" class="block text-sm font-medium text-gray-700 mb-1">Jenis Logam</label>
+                <select id="metalType" class="w-full rounded-lg border-gray-300 border px-4 py-2.5 bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
+                    <option value="7850">Baja Karbon (7850 kg/m³)</option>
+                    <option value="7930">Baja Tahan Karat / Stainless Steel 304 (7930 kg/m³)</option>
+                    <option value="2700">Aluminium (2700 kg/m³)</option>
+                    <option value="8960">Tembaga (8960 kg/m³)</option>
+                    <option value="8530">Kuningan (8530 kg/m³)</option>
+                    <option value="7200">Besi Cor (7200 kg/m³)</option>
+                    <option value="11340">Timbal (11340 kg/m³)</option>
+                    <option value="19300">Emas murni (19300 kg/m³)</option>
+                </select>
+            </div>
+
+            <!-- Pilih Bentuk dan Satuan -->
+            <div class="grid grid-cols-3 gap-4">
+                <div class="col-span-2">
+                    <label for="shapeType" class="block text-sm font-medium text-gray-700 mb-1">Bentuk Logam</label>
+                    <select id="shapeType" class="w-full rounded-lg border-gray-300 border px-4 py-2.5 bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" onchange="updateInputFields()">
+                        <option value="plate">Plat / Lembaran</option>
+                        <option value="round_bar">Batang Bulat</option>
+                        <option value="pipe">Pipa (Berongga)</option>
+                        <option value="square_bar">Batang Persegi</option>
+                    </select>
+                </div>
+                <div class="col-span-1">
+                    <label for="unitType" class="block text-sm font-medium text-gray-700 mb-1">Satuan</label>
+                    <select id="unitType" class="w-full rounded-lg border-gray-300 border px-4 py-2.5 bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" onchange="changeUnit()">
+                        <option value="mm">mm</option>
+                        <option value="cm">cm</option>
+                        <option value="m">m</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Input Dinamis Berdasarkan Bentuk -->
+            <div id="dynamicInputs" class="space-y-4 p-4 bg-gray-50 rounded-lg border border-gray-200 fade-in">
+                <!-- Inputs akan di-generate oleh JS di sini -->
+            </div>
+
+            <!-- Input Harga -->
+            <div>
+                <label for="pricePerKg" class="block text-sm font-medium text-gray-700 mb-1">Harga per Kg (Rp) <span class="text-gray-400 font-normal">- Opsional</span></label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <span class="text-gray-500 sm:text-sm">Rp</span>
+                    </div>
+                    <input type="number" id="pricePerKg" class="w-full rounded-lg border-gray-300 border pl-10 pr-4 py-2.5 bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" placeholder="Contoh: 15000" min="0" step="any">
+                </div>
+            </div>
+
+            <!-- Tombol Hitung -->
+            <button type="button" onclick="calculateWeight()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg shadow-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                Hitung Berat
+            </button>
+        </form>
+
+        <!-- Hasil -->
+        <div id="resultContainer" class="mt-8 hidden fade-in">
+            <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg shadow-sm">
+                <div class="flex items-start">
+                    <div class="flex-shrink-0 mt-1">
+                        <!-- Icon -->
+                        <svg class="h-6 w-6 text-blue-500" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <div class="ml-4 w-full">
+                        <div class="border-b border-blue-200 pb-2 mb-2 flex justify-between items-center">
+                            <p id="resultLabel" class="text-sm text-blue-700 font-medium">Perkiraan Berat:</p>
+                            <p id="resultWeight" class="text-xl font-bold text-blue-900">0.00 kg</p>
+                        </div>
+                        <div id="priceRow" class="flex justify-between items-center">
+                            <p class="text-sm text-blue-700 font-medium">Estimasi Harga:</p>
+                            <p id="resultPrice" class="text-xl font-bold text-green-600">Rp 0</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <p class="text-xs text-gray-400 mt-4 text-center">
+                *Hasil ini adalah perkiraan teoretis. Berat aktual mungkin sedikit berbeda karena toleransi manufaktur dan paduan spesifik.
+            </p>
+        </div>
+
+    </div>
+
+    <script>
+        // Fungsi untuk mengganti satuan di label tanpa menghilangkan input
+        function changeUnit() {
+            const unit = document.getElementById('unitType').value;
+            const labels = document.querySelectorAll('.unit-label');
+            labels.forEach(label => label.innerText = unit);
+            
+            // Hitung ulang secara otomatis jika hasil sedang ditampilkan
+            const resultContainer = document.getElementById('resultContainer');
+            if (!resultContainer.classList.contains('hidden') && !resultContainer.querySelector('.bg-red-50')) {
+                calculateWeight();
+            }
+        }
+
+        // Fungsi untuk memperbarui field input berdasarkan bentuk yang dipilih
+        function updateInputFields() {
+            const shape = document.getElementById('shapeType').value;
+            const unit = document.getElementById('unitType').value;
+            const container = document.getElementById('dynamicInputs');
+            
+            // Animasi transisi sederhana
+            container.classList.remove('fade-in');
+            void container.offsetWidth; // Trigger reflow
+            container.classList.add('fade-in');
+
+            let html = '';
+
+            if (shape === 'plate') {
+                html = `
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-500 mb-1">Panjang (<span class="unit-label">${unit}</span>)</label>
+                            <input type="number" id="dimLength" class="w-full rounded border-gray-300 px-3 py-2 text-sm focus:ring-blue-500 focus:border-blue-500" placeholder="Contoh: 1000" min="0" step="any">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-500 mb-1">Lebar (<span class="unit-label">${unit}</span>)</label>
+                            <input type="number" id="dimWidth" class="w-full rounded border-gray-300 px-3 py-2 text-sm focus:ring-blue-500 focus:border-blue-500" placeholder="Contoh: 1000" min="0" step="any">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Ketebalan (<span class="unit-label">${unit}</span>)</label>
+                        <input type="number" id="dimThickness" class="w-full rounded border-gray-300 px-3 py-2 text-sm focus:ring-blue-500 focus:border-blue-500" placeholder="Contoh: 10" min="0" step="any">
+                    </div>
+                `;
+            } else if (shape === 'round_bar') {
+                html = `
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Diameter (<span class="unit-label">${unit}</span>)</label>
+                        <input type="number" id="dimDiameter" class="w-full rounded border-gray-300 px-3 py-2 text-sm focus:ring-blue-500 focus:border-blue-500" placeholder="Contoh: 50" min="0" step="any">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Panjang (<span class="unit-label">${unit}</span>)</label>
+                        <input type="number" id="dimLength" class="w-full rounded border-gray-300 px-3 py-2 text-sm focus:ring-blue-500 focus:border-blue-500" placeholder="Contoh: 6000" min="0" step="any">
+                    </div>
+                `;
+            } else if (shape === 'pipe') {
+                html = `
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-500 mb-1">Diameter Luar (<span class="unit-label">${unit}</span>)</label>
+                            <input type="number" id="dimOuterDiameter" class="w-full rounded border-gray-300 px-3 py-2 text-sm focus:ring-blue-500 focus:border-blue-500" placeholder="Contoh: 100" min="0" step="any">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-500 mb-1">Tebal Dinding (<span class="unit-label">${unit}</span>)</label>
+                            <input type="number" id="dimWallThickness" class="w-full rounded border-gray-300 px-3 py-2 text-sm focus:ring-blue-500 focus:border-blue-500" placeholder="Contoh: 5" min="0" step="any">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Panjang (<span class="unit-label">${unit}</span>)</label>
+                        <input type="number" id="dimLength" class="w-full rounded border-gray-300 px-3 py-2 text-sm focus:ring-blue-500 focus:border-blue-500" placeholder="Contoh: 6000" min="0" step="any">
+                    </div>
+                `;
+            } else if (shape === 'square_bar') {
+                html = `
+                     <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-500 mb-1">Sisi (<span class="unit-label">${unit}</span>)</label>
+                            <input type="number" id="dimSide" class="w-full rounded border-gray-300 px-3 py-2 text-sm focus:ring-blue-500 focus:border-blue-500" placeholder="Contoh: 25" min="0" step="any">
+                        </div>
+                         <div>
+                            <label class="block text-xs font-medium text-gray-500 mb-1">Panjang (<span class="unit-label">${unit}</span>)</label>
+                            <input type="number" id="dimLength" class="w-full rounded border-gray-300 px-3 py-2 text-sm focus:ring-blue-500 focus:border-blue-500" placeholder="Contoh: 6000" min="0" step="any">
+                        </div>
+                    </div>
+                `;
+            }
+
+            container.innerHTML = html;
+        }
+
+        // Fungsi untuk menampilkan peringatan sementara (sebagai pengganti alert)
+        function showMessage(msg) {
+             const resultContainer = document.getElementById('resultContainer');
+             const resultWeight = document.getElementById('resultWeight');
+             const resultLabel = document.getElementById('resultLabel');
+             const priceRow = document.getElementById('priceRow');
+             
+             resultContainer.classList.remove('hidden');
+             // Ubah styling untuk menunjukkan error
+             resultContainer.querySelector('.bg-blue-50').className = 'bg-red-50 border-l-4 border-red-500 p-4 rounded-r-lg shadow-sm';
+             resultContainer.querySelector('svg').className.baseVal = 'h-6 w-6 text-red-500';
+             resultLabel.className = 'text-sm text-red-700 font-medium';
+             resultLabel.innerText = 'Perhatian:';
+             
+             resultWeight.className = 'text-lg font-semibold text-red-900 mt-1';
+             resultWeight.innerText = msg;
+             
+             // Sembunyikan baris harga saat error
+             if (priceRow) priceRow.style.display = 'none';
+        }
+
+        // Fungsi untuk mereset tampilan hasil ke mode normal (bukan error)
+        function resetResultDisplay() {
+             const resultContainer = document.getElementById('resultContainer');
+             const resultLabel = document.getElementById('resultLabel');
+             const priceRow = document.getElementById('priceRow');
+             
+             resultContainer.querySelector('.bg-red-50')?.setAttribute('class', 'bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg shadow-sm');
+             resultContainer.querySelector('svg')?.setAttribute('class', 'h-6 w-6 text-blue-500');
+             
+             if(resultLabel) {
+                 resultLabel.className = 'text-sm text-blue-700 font-medium';
+                 resultLabel.innerText = 'Perkiraan Berat:';
+             }
+             
+             const weightP = document.getElementById('resultWeight');
+             if(weightP) {
+                 weightP.className = 'text-xl font-bold text-blue-900';
+             }
+             
+             // Tampilkan kembali baris harga secara default
+             if (priceRow) priceRow.style.display = 'flex';
+        }
+
+        // Fungsi untuk menghitung berat
+        function calculateWeight() {
+            resetResultDisplay();
+            
+            const density = parseFloat(document.getElementById('metalType').value); // Massa jenis dalam kg/m³
+            const shape = document.getElementById('shapeType').value;
+            const unit = document.getElementById('unitType').value;
+            
+            // Tentukan faktor konversi ke meter berdasarkan satuan yang dipilih
+            let conversionFactor = 1000; // mm ke meter
+            if (unit === 'cm') conversionFactor = 100; // cm ke meter
+            else if (unit === 'm') conversionFactor = 1; // m ke meter
+
+            let volumeCubicMeters = 0;
+
+            // Validasi umum untuk input angka
+            const getVal = (id) => {
+                const el = document.getElementById(id);
+                if(!el || el.value === '') return null;
+                const val = parseFloat(el.value);
+                if(isNaN(val) || val <= 0) return -1; // Indikator error
+                return val;
+            };
+
+            // Menghitung volume berdasarkan bentuk
+            if (shape === 'plate') {
+                const length = getVal('dimLength');
+                const width = getVal('dimWidth');
+                const thickness = getVal('dimThickness');
+                
+                if(length === null || width === null || thickness === null) return showMessage("Mohon isi semua dimensi pelat.");
+                if(length === -1 || width === -1 || thickness === -1) return showMessage("Dimensi harus berupa angka positif.");
+
+                // Konversi ke meter
+                volumeCubicMeters = (length / conversionFactor) * (width / conversionFactor) * (thickness / conversionFactor);
+
+            } else if (shape === 'round_bar') {
+                const diameter = getVal('dimDiameter');
+                const length = getVal('dimLength');
+
+                if(diameter === null || length === null) return showMessage("Mohon isi semua dimensi batang bulat.");
+                if(diameter === -1 || length === -1) return showMessage("Dimensi harus berupa angka positif.");
+
+                const radiusMeter = (diameter / 2) / conversionFactor;
+                const lengthMeter = length / conversionFactor;
+                
+                // Volume silinder = π * r² * t
+                volumeCubicMeters = Math.PI * Math.pow(radiusMeter, 2) * lengthMeter;
+
+            } else if (shape === 'pipe') {
+                const outerDiameter = getVal('dimOuterDiameter');
+                const wallThickness = getVal('dimWallThickness');
+                const length = getVal('dimLength');
+
+                if(outerDiameter === null || wallThickness === null || length === null) return showMessage("Mohon isi semua dimensi pipa.");
+                if(outerDiameter === -1 || wallThickness === -1 || length === -1) return showMessage("Dimensi harus berupa angka positif.");
+                
+                if (wallThickness * 2 >= outerDiameter) {
+                    return showMessage("Tebal dinding terlalu besar untuk diameter luar ini (bukan pipa berongga).");
+                }
+
+                const outerRadiusMeter = (outerDiameter / 2) / conversionFactor;
+                const innerRadiusMeter = ((outerDiameter - (2 * wallThickness)) / 2) / conversionFactor;
+                const lengthMeter = length / conversionFactor;
+
+                // Volume pipa = Volume silinder luar - Volume silinder dalam
+                const outerVolume = Math.PI * Math.pow(outerRadiusMeter, 2) * lengthMeter;
+                const innerVolume = Math.PI * Math.pow(innerRadiusMeter, 2) * lengthMeter;
+                volumeCubicMeters = outerVolume - innerVolume;
+
+            } else if (shape === 'square_bar') {
+                const side = getVal('dimSide');
+                const length = getVal('dimLength');
+
+                if(side === null || length === null) return showMessage("Mohon isi semua dimensi batang persegi.");
+                if(side === -1 || length === -1) return showMessage("Dimensi harus berupa angka positif.");
+
+                const sideMeter = side / conversionFactor;
+                const lengthMeter = length / conversionFactor;
+
+                volumeCubicMeters = sideMeter * sideMeter * lengthMeter;
+            }
+
+            // Hitung berat: Massa = Volume x Massa Jenis
+            const weightKg = volumeCubicMeters * density;
+
+            // Ambil Harga per Kg
+            const priceInput = document.getElementById('pricePerKg').value;
+            const pricePerKg = parseFloat(priceInput);
+            let totalPrice = 0;
+            let showPrice = false;
+
+            if (!isNaN(pricePerKg) && pricePerKg > 0) {
+                totalPrice = weightKg * pricePerKg;
+                showPrice = true;
+            }
+
+            // Tampilkan hasil
+            const resultContainer = document.getElementById('resultContainer');
+            const resultWeight = document.getElementById('resultWeight');
+            const resultPrice = document.getElementById('resultPrice');
+            const priceRow = document.getElementById('priceRow');
+            
+            // Format angka berat
+            let formattedWeight = weightKg.toFixed(2);
+            if(weightKg < 0.01 && weightKg > 0) {
+                 formattedWeight = weightKg.toFixed(4); // Tampilkan desimal lebih banyak jika sangat ringan
+            } else if (weightKg > 1000) {
+                 formattedWeight = new Intl.NumberFormat('id-ID').format(weightKg.toFixed(2));
+            }
+
+            resultWeight.innerText = `${formattedWeight} kg`;
+            
+            // Format dan tampilkan harga jika diisi
+            if (showPrice) {
+                resultPrice.innerText = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(totalPrice);
+                priceRow.style.display = 'flex';
+            } else {
+                priceRow.style.display = 'none'; // Sembunyikan jika harga tidak diinput
+            }
+            
+            // Efek animasi muncul kembali
+            resultContainer.classList.remove('hidden', 'fade-in');
+            void resultContainer.offsetWidth; // Trigger reflow
+            resultContainer.classList.add('fade-in');
+        }
+
+        // Inisialisasi input saat halaman pertama kali dimuat
+        window.onload = function() {
+            updateInputFields();
+        };
+    </script>
+</body>
+</html>
